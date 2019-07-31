@@ -1,29 +1,57 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div>
-    <router-view/>
+    <home-left></home-left>
+    <home-right></home-right>
   </div>
 </template>
 
 <style lang="scss">
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
-#nav {
-  padding: 30px;
-  a {
-    font-weight: bold;
+  * {
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body, #app {
+    height: 100%;
+    width: 100%;
+  }
+
+  #app {
+    font-family: 'Avenir', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     color: #2c3e50;
-    &.router-link-exact-active {
-      color: #42b983;
+    display: flex;
+    flex-direction: row;
+  }
+  .edit-dialog{
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    background-color: rgba(0,0,0,0.6);
+  }
+
+</style>
+
+<script>
+  import HomeLeft from './components/HomeLeft'
+  import HomeRight from './components/HomeRight'
+
+  export default {
+    components: {
+      'home-left': HomeLeft,
+      'home-right': HomeRight
+    },
+    data () {
+      return {
+      }
+    },
+    methods:{
+
     }
   }
-}
-</style>
+
+</script>
