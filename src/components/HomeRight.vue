@@ -22,7 +22,7 @@
           <el-menu-item index="2-4-3">选项3</el-menu-item>
         </el-submenu>
       </el-submenu>
-      <el-menu-item index="/house">房间规划</el-menu-item>
+      <el-menu-item index="/house_list">房间规划</el-menu-item>
       <el-menu-item index="/about">关于</el-menu-item>
     </el-menu>
     <router-view/>
@@ -30,12 +30,18 @@
 </template>
 
 <script>
+  import house_json from '@/assets/data/house.json'
   export default {
     name: 'HomeRight',
     data () {
       return {
         activeIndex: '1',
       }
+    },
+    created(){
+      console.log("json",house_json);
+      house_json.name = "Nick";
+      console.log("json1",house_json);
     },
     methods: {
       handleSelect (key, keyPath) {

@@ -1,7 +1,8 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Home from './views/Home.vue'
-import House from './views/HouseCanvas'
+import HouseList from './views/house/HouseList'
+import HouseCanvas from './views/house/HouseCanvas'
 
 Vue.use(Router)
 
@@ -21,9 +22,14 @@ export default new Router({
       component: () => import(/* webpackChunkName: "about" */ './views/About.vue')
     },
     {
-      path: '/house',
-      name: 'house',
-      component: House
+      path: '/house_canvas',
+      name: 'house_canvas',
+      component: HouseCanvas
+    },
+    {
+      path: '/house_list',
+      name: 'house_list',
+      component: HouseList
     }
   ]
 })

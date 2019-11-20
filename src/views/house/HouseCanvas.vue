@@ -70,6 +70,7 @@
     <div>
       <el-button @click="doAdd" type="primary">添加</el-button>
       <el-button @click="saveList" type="success">保存</el-button>
+      <el-button @click="toList" type="info">列表</el-button>
     </div>
   </div>
 </template>
@@ -193,7 +194,7 @@
 </style>
 
 <script>
-  import DragView from '../components/DragView'
+  import DragView from '../../components/DragView'
 
   export default {
     name: 'HouseCanvas',
@@ -208,7 +209,17 @@
         modeList: [],
         currentIndex: -1,
         dialogMode: {},
-        listTitle:"",
+        listTitle: '',
+        listId: '',
+      }
+    },
+    mounted: function () {
+      let data = this.$route.query.data;
+      if(data){
+        this.listTitle = data.title;
+        this.modeList = data.data;
+        this.listId = data.id;
+        console.log('query', data);
       }
     },
     methods: {
@@ -233,49 +244,63 @@
         })
       },
       saveList () {
-        this.showTitle = true;
+        this.showTitle = true
+      },
+      toList () {
+        this.$router.replace("/house_list")
       },
       doCancel () {
         console.log('doCancel')
         this.showDialog = false
       },
       doSave () {
-        console.log('doSave-before', this.dialogMode, typeof this.dialogMode.width)
-        try {
-          this.dialogMode.width = Number.parseFloat(this.dialogMode.width)
-          this.dialogMode.height = Number.parseFloat(this.dialogMode.height)
-          this.dialogMode.left = Number.parseFloat(this.dialogMode.left)
-          this.dialogMode.top = Number.parseFloat(this.dialogMode.top)
-          console.log('doSave-after', this.dialogMode, typeof this.dialogMode.width)
-          this.modeList[this.currentIndex] = this.dialogMode
-        } catch (e) {
-          console.log('save', e)
-        }
-        this.showDialog = false
-      },
-      doCancelTitle(){
-        this.showTitle = false;
-      },
-      doSureTitle(){
-        if (this.modeList) {
-          let historyData = localStorage.getItem('modeHistoryList')
-          console.log("saveList-historyData",historyData);
-          let historyList = [];
-          if (historyData) {
-            historyList = JSON.parse(historyData);
+        if (this.dialogMode) {
+          console.log('doSave-before', this.dialogMode, typeof this.dialogMode.width)
+          try {
+            this.dialogMode.width = Number.parseFloat(this.dialogMode.width)
+            this.dialogMode.height = Number.parseFloat(this.dialogMode.height)
+            this.dialogMode.left = Number.parseFloat(this.dialogMode.left)
+            this.dialogMode.top = Number.parseFloat(this.dialogMode.top)
+            console.log('doSave-after', this.dialogMode, typeof this.dialogMode.width)
+            this.modeList[this.currentIndex] = this.dialogMode
+          } catch (e) {
+            console.log('save', e)
           }
-          if (!historyList && historyList.length == 0) {
-            historyList = [];
-            historyList.push({title:this.listTitle,data:this.modeList});
-          }else{
-            jQuery.map(historyList,(item,index)=>{
-              console.log("map:",item,index);
+          this.showDialog = false
+        }
+      },
+      doCancelTitle () {
+        this.showTitle = false
+      },
+      doSureTitle () {
+        let that = this
+        if (that.modeList) {
+          let historyData = localStorage.getItem('modeHistoryList')
+          console.log('saveList-historyData', historyData)
+          let historyList = []
+          if (historyData) {
+            historyList = JSON.parse(historyData)
+          }
+          if (!historyList || historyList.length == 0) {
+            historyList = []
+          } else {
+            $.map(historyList, (item, index) => {
+              console.log('map:', item, index)
+              if (item.id == that.listId) {
+                item.data = that.modeList
+                item.title = that.listTitle
+              }
             })
           }
+          if (!that.listId) {
+            let id = new Date().getTime()
+            historyList.push({ id: id, title: that.listTitle, data: that.modeList })
+          }
 
-          console.log("saveList-historyList",historyList);
-          localStorage.setItem('modeHistoryList', JSON.stringify(historyList));
+          console.log('saveList-historyList', historyList)
+          localStorage.setItem('modeHistoryList', JSON.stringify(historyList))
         }
+        that.showTitle = false
       },
       onDeactivated () {
         console.log('onDeactivated')
