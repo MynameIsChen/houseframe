@@ -1,57 +1,13 @@
 <template>
   <div class="house">
-    <div class="house-canvas">
+    <div class="house-canvas" :style="dialogStyle">
       <DragView v-for="(item,index) in modeList" :key="index" :mode="item" v-on:deactivated="onDeactivated"
                 v-on:activated="onActivated(index)">
         <div class="edit" @click="doEdit(index)" v-if="currentIndex==index">编辑</div>
       </DragView>
 
-      <div class="dialog" v-if="showDialog">
-        <div class="dialog-content">
-          <div class="dialog-left">
-            <div class="dialog-item">
-              <div class="dialog-title">内容：</div>
-              <el-input v-model="dialogMode.content" placeholder="请输入内容"></el-input>
-            </div>
-            <div class="dialog-item">
-              <div class="dialog-title">宽度：</div>
-              <el-input type="number" v-model="dialogMode.width" placeholder="0"></el-input>
-            </div>
-            <div class="dialog-item">
-              <div class="dialog-title">高度：</div>
-              <el-input type="number" v-model="dialogMode.height" placeholder="0"></el-input>
-            </div>
-            <div class="dialog-item">
-              <div class="dialog-title">距左：</div>
-              <el-input type="number" v-model="dialogMode.left" placeholder="0"></el-input>
-            </div>
-            <div class="dialog-item">
-              <div class="dialog-title">距上：</div>
-              <el-input type="number" v-model="dialogMode.top" placeholder="0"></el-input>
-            </div>
-            <div class="dialog-item">
-              <div class="dialog-title">对齐：</div>
-              <el-input type="number" v-model="dialogMode.snap" placeholder="0"></el-input>
-            </div>
-          </div>
-          <div class="dialog-right">
-            <div class="dialog-title">背景：</div>
-            <el-upload
-              class="avatar-uploader"
-              :action="uploadUrl"
-              :show-file-list="false"
-              :on-success="handleAvatarSuccess"
-              :before-upload="beforeAvatarUpload">
-              <img v-if="dialogMode.img" :src="dialogMode.img" class="avatar">
-              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-            </el-upload>
-          </div>
-        </div>
-        <div class="dialog-button">
-          <el-button type="info" @click="doCancel">取消</el-button>
-          <el-button type="success" @click="doSave">保存</el-button>
-        </div>
-      </div>
+      <OptionDialog :dialogType="dialogType" :dialogOptions="dialogMode" :doCancel="doCancel" :doSave="doSave"></OptionDialog>
+      <OptionDialog :dialogType="optionType" :dialogOptions="dialogOption" :doCancel="cancelOption" :doSave="saveOption"></OptionDialog>
 
       <div class="dialog" v-if="showTitle">
         <div class="dialog-content">
@@ -70,12 +26,15 @@
     <div>
       <el-button @click="doAdd" type="primary">添加</el-button>
       <el-button @click="saveList" type="success">保存</el-button>
+      <el-button @click="doAlert" type="warning">修改</el-button>
       <el-button @click="toList" type="info">列表</el-button>
     </div>
   </div>
 </template>
 
-<style scoped>
+<style lang="scss">
+  @import url("../../style/dialog.css");
+
   .house {
     width: 100%;
     height: 100%;
@@ -102,108 +61,22 @@
     background-color: black;
     opacity: 0.8;
   }
-
-  .dialog {
-    width: 100%;
-    height: 100%;
-    position: fixed;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    top: 0;
-    left: 0;
-    z-index: 10;
-    background-color: rgba(0, 0, 0, 0.6);
-    font-size: 16px;
-  }
-
-  .dialog-content {
-    width: 80%;
-    background-color: white;
-    display: flex;
-    flex-direction: row;
-    padding: 20px;
-    box-sizing: border-box;
-    border-radius: 4px;
-  }
-
-  .dialog-left {
-    display: flex;
-    flex-wrap: wrap;
-    flex: 1;
-  }
-
-  .dialog-right {
-    margin-left: 20px;
-    margin-right: 10px;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .dialog-button {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 20px;
-  }
-
-  .dialog-item {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-  }
-
-  .dialog-title {
-    width: 50px;
-  }
-
-  .el-input {
-    width: 100px;
-    flex: 1;
-  }
-
-  .avatar-uploader {
-    border: 1px dashed #d9d9d9;
-    border-radius: 6px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    margin-top: 10px;
-  }
-
-  .avatar-uploader:hover {
-    border-color: #409EFF;
-  }
-
-  .avatar-uploader-icon {
-    font-size: 28px;
-    color: #8c939d;
-    width: 150px;
-    height: 150px;
-    line-height: 150px;
-    text-align: center;
-  }
-
-  .avatar {
-    width: 150px;
-    height: 150px;
-    display: block;
-  }
-
 </style>
 
 <script>
   import DragView from '../../components/DragView'
+  import OptionDialog from '../../components/OptionDialog'
 
   export default {
     name: 'HouseCanvas',
     components: {
-      DragView
+      DragView,
+      OptionDialog
     },
     data: function () {
       return {
-        showDialog: false,
+        dialogType:0,
+        optionType:0,
         showTitle: false,
         uploadUrl: '',//https://jsonplaceholder.typicode.com/posts/
         modeList: [],
@@ -211,24 +84,38 @@
         dialogMode: {},
         listTitle: '',
         listId: '',
+        dialogStyle:{},
+        dialogOption:null
       }
     },
     mounted: function () {
       let data = this.$route.query.data;
+      let option = this.$route.query.option;
       if(data){
         this.listTitle = data.title;
         this.modeList = data.data;
         this.listId = data.id;
         console.log('query', data);
       }
+      if(option){
+        this.dialogOption = option;
+        this.setDialogOptions();
+      }
     },
     methods: {
+      setDialogOptions(){
+        let style = {
+          height:  this.dialogOption.height+'px',
+          width:  this.dialogOption.width+'px'
+        }
+        this.dialogStyle = style;
+      },
       doEdit () {
         let mode = this.modeList[this.currentIndex]
         console.log('doEdit')
         // this.currentIndex = index
         this.dialogMode = mode
-        this.showDialog = true
+        this.dialogType = 1;
       },
       doAdd () {
         this.currentIndex = this.modeList.length
@@ -246,12 +133,22 @@
       saveList () {
         this.showTitle = true
       },
+      doAlert(){
+        this.optionType = 1;
+      },
+      cancelOption(){
+        this.optionType = 0;
+      },
+      saveOption(){
+        this.setDialogOptions();
+        this.optionType = 0;
+      },
       toList () {
         this.$router.replace("/house_list")
       },
       doCancel () {
-        console.log('doCancel')
-        this.showDialog = false
+        console.log('doCancel');
+        this.dialogType = 0;
       },
       doSave () {
         if (this.dialogMode) {
@@ -266,7 +163,7 @@
           } catch (e) {
             console.log('save', e)
           }
-          this.showDialog = false
+          this.dialogType = 0;
         }
       },
       doCancelTitle () {
@@ -289,12 +186,13 @@
               if (item.id == that.listId) {
                 item.data = that.modeList
                 item.title = that.listTitle
+                item.option = that.dialogOption
               }
             })
           }
           if (!that.listId) {
             let id = new Date().getTime()
-            historyList.push({ id: id, title: that.listTitle, data: that.modeList })
+            historyList.push({ id: id, title: that.listTitle,option:that.dialogOption, data: that.modeList })
           }
 
           console.log('saveList-historyList', historyList)
@@ -310,29 +208,6 @@
         console.log('onActivated')
         this.currentIndex = index
       },
-      handleAvatarSuccess (res, file) {
-        this.dialogMode.img = URL.createObjectURL(file.raw)
-      },
-      beforeAvatarUpload (file) {
-        console.log(file)
-        if (window.FileReader) {
-          let reader = new FileReader()
-          reader.readAsDataURL(file)
-          reader.onload = (e) => {
-            this.dialogMode.img = e.target.result
-          }
-        }
-        const isJPG = file.type === 'image/jpeg'
-        const isLt2M = file.size / 1024 / 1024 < 2
-
-        if (!isJPG) {
-          this.$message.error('上传头像图片只能是 JPG 格式!')
-        }
-        if (!isLt2M) {
-          this.$message.error('上传头像图片大小不能超过 2MB!')
-        }
-        return isJPG && isLt2M
-      }
     }
   }
 </script>
